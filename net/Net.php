@@ -1,6 +1,8 @@
 <?php
 namespace net;
 
+use net\connection\TcpConnection;
+
 class Net
 {
     private $address = "";
@@ -61,20 +63,14 @@ class Net
 
     private function acceptConnection($connection)
     {
-        $connection = @stream_socket_accept($connection, 0, $remoteAddress);
+        $socket = @stream_socket_accept($connection, 0, $remoteIp);
 
         // Thundering herd.
-        if (!$connection) {
-            return ;
+        if (!$socket) {
+            return;
         }
 
-        $request = fread($connection, 8093);
-        echo $request;
-        $httpHeader = "HTTP/1.1 200 OK\r\n" .
-            "Server:self\r\n" .
-            "Content-Type:text/html\r\n\r\n";
-        $r = fwrite($connection, $httpHeader."this is server ".getmypid(), 9999);
-        fclose($connection);
+        $connection = new TcpConnection($socket, $remoteIp);
     }
 
     private function registerEvent()
