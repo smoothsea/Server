@@ -2,6 +2,7 @@
 namespace net;
 
 use net\connection\TcpConnection;
+use net\event\EventFactory;
 
 class Net
 {
@@ -49,11 +50,11 @@ class Net
             $pid = pcntl_fork();
 
             if ($pid == 0) {
-                $event = event_new();
-                event_set($event, $socket, EV_READ | EV_PERSIST, [$this, "acceptConnection"]);
-                event_base_set($event, self::$event);
-                event_add($event);
-                event_base_loop(self::$event);
+                $that = $this;
+                self::$event->addReadStream($socket, function ($t) use ($that) {
+                    $that->acceptConnection($t);
+                });
+                self::$event->run();
             } else {
                 self::$masterPid = getmypid();
             }
@@ -75,12 +76,11 @@ class Net
 
     private function registerEvent()
     {
-        if (extension_loaded("libevent") ) {
-            self::$event = event_base_new();
-            return true;
-        }
+        self::$event = EventFactory::getInstance();
 
-        exit("please load libevent extension");
+        if (!self::$event) {
+            exit("please load libevent extension");
+        }
     }
 
     private function display()
