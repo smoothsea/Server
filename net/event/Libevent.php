@@ -3,16 +3,16 @@ namespace net\event;
 
 class Libevent
 {
-	private $eventBase = null;
-	private $listeners = [];
-	private $events = [];
+	public $eventBase = null;
+	public $listeners = [];
+	public $events = [];
 
 	public function __construct ()
 	{
 		$this->eventBase = event_base_new();
 	}
 
-	public function addReadStream($socket, callable $callback)
+	public function addReadStream($socket, $callback)
 	{
 		$id = (int)$socket;
 
@@ -42,7 +42,7 @@ class Libevent
 			return false;
 		}
 
-		$this->events[$id] = $event;
+		$this->events[$id][$flag] = $event;
 
 		return true;
 	}

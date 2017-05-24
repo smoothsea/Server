@@ -8,27 +8,24 @@ class TcpConnection
 	private $socket = null;
 	private $remoteIp = "";
 
+	public $onMessage = null;
+
 	public function __construct ($socket, $remoteIp)
 	{
 		$this->socket = $socket;
 		$this->remoteIp = $remoteIp;
 
-		$c = stream_set_blocking($this->socket, 0);
-		$this->socket = fopen("http://265g.com", "r");
-
-		$that = $this;
-		Net::$event->addReadStream($this->socket, function ($connection) use ($that) {
-			$that->baseRead($connection);
-		});
+		Net::$event->addReadStream($this->socket, [$this, "baseRead"]);
 	}
 
 	public function baseRead($connection)
 	{
-		var_dump(2);
 		$buffer = fread($connection, 8093);
 		if ($buffer == "" || $buffer === false) {
-
+			return false;
 		}
+
+		call_user_func($this->onMessage, $this);
 		$httpHeader = "HTTP/1.1 200 OK\r\n" .
 				"Server:self\r\n" .
 				"Content-Type:text/html\r\n\r\n";
@@ -36,5 +33,8 @@ class TcpConnection
 		fclose($connection);
 	}
 
+	public function send()
+	{
 
+	}
 }

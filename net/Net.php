@@ -10,6 +10,7 @@ class Net
     private $port = "";
     private $protocal = "";
     public $count = 1;
+    public $onMessage = null;
     public static $event = null;
     public static $masterPid = null;
 
@@ -51,9 +52,7 @@ class Net
 
             if ($pid == 0) {
                 $that = $this;
-                self::$event->addReadStream($socket, function ($t) use ($that) {
-                    $that->acceptConnection($t);
-                });
+                self::$event->addReadStream($socket, [$this, "acceptConnection"]);
                 self::$event->run();
             } else {
                 self::$masterPid = getmypid();
@@ -62,7 +61,7 @@ class Net
 
     }
 
-    private function acceptConnection($connection)
+    public function acceptConnection($connection)
     {
         $socket = @stream_socket_accept($connection, 0, $remoteIp);
 
@@ -72,6 +71,7 @@ class Net
         }
 
         $connection = new TcpConnection($socket, $remoteIp);
+        $connection->onMessage = $this->onMessage;
     }
 
     private function registerEvent()
