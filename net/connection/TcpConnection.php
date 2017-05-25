@@ -5,12 +5,14 @@ use \net\Net;
 
 class TcpConnection
 {
+	const READ_BUFFER_SIZE = 65535;
 	private $socket = null;
 	private $remoteIp = "";
-
+	public $protocol = "";
 	public $onMessage = null;
+	public $recvBuff = "";
 
-	public function __construct ($socket, $remoteIp)
+	public function __construct($socket, $remoteIp)
 	{
 		$this->socket = $socket;
 		$this->remoteIp = $remoteIp;
@@ -20,21 +22,30 @@ class TcpConnection
 
 	public function baseRead($connection)
 	{
-		$buffer = fread($connection, 8093);
+		$buffer = fread($connection, self::READ_BUFFER_SIZE);
 		if ($buffer == "" || $buffer === false) {
 			return false;
+		} else {
+			$this->recvBuff .= $buffer;
 		}
 
-		call_user_func($this->onMessage, $this);
-		$httpHeader = "HTTP/1.1 200 OK\r\n" .
-				"Server:self\r\n" .
-				"Content-Type:text/html\r\n\r\n";
-		fwrite($connection, $httpHeader."this is server ".getmypid(), 9999);
-		fclose($connection);
+		$protocol = $this->protocol;
+		call_user_func($this->onMessage, $this, $protocol::decode($buffer, $this));
 	}
 
-	public function send()
+	public function send($buff)
 	{
+		$protocol = $this->protocol;
+		$sendContent = $protocol::encode($buff, $this);
 
+		if (!$sendContent) return null;
+
+		$ret = fwrite($this->socket, $sendContent);
+		if ($ret) return true;
+	}
+
+	public function getRemoteIp()
+	{
+		return $this->remoteIp;
 	}
 }

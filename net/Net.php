@@ -8,17 +8,17 @@ class Net
 {
     private $address = "";
     private $port = "";
-    private $protocal = "";
+    public $protocol = "";
     public $count = 1;
     public $onMessage = null;
     public static $event = null;
     public static $masterPid = null;
 
-    public function __construct($address, $port, $protocal)
+    public function __construct($address, $port, $protocol)
     {
         $this->address = $address;
         $this->port = $port;
-        $this->protocal = $protocal;
+        $this->protocol = $protocol;
     }
 
     public function run()
@@ -32,6 +32,14 @@ class Net
     private function init()
     {
         $this->checkSapi();
+
+        //加载协议
+        if (!class_exists($this->protocol)) {
+            $protocol = '\\net\\protocol\\'.ucfirst($this->protocol);
+            if (!class_exists($protocol)) exit("{$protocol} not exist");
+            $this->protocol = $protocol;
+        }
+
         $this->registerEvent();
     }
 
@@ -72,6 +80,7 @@ class Net
 
         $connection = new TcpConnection($socket, $remoteIp);
         $connection->onMessage = $this->onMessage;
+        $connection->protocol = $this->protocol;
     }
 
     private function registerEvent()
