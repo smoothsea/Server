@@ -39,6 +39,9 @@ class Http implements \net\protocol\TcpProtocolInterface
 		list($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI'], $_SERVER['SERVER_PROTOCOL']) = explode(' ',
 				$httpCapital);
 		unset($headerData[0]);
+		$fp = fopen("1.txt", "a+");
+		fwrite($fp, "\r\n-----------------\r\n".$httpCapital);
+		fclose($fp);
 
 		foreach ($headerData as $v) {
 			list($messageName, $messageContent) = explode(":", $v);
@@ -46,6 +49,7 @@ class Http implements \net\protocol\TcpProtocolInterface
 			$messageContent = trim($messageContent);
 			$_SERVER["HTTP_".$messageName] = $messageContent;
 
+			$boundary = "";
 			switch($messageName) {
 				case "HOST":
 					$t = explode(":", $messageContent);
@@ -54,6 +58,14 @@ class Http implements \net\protocol\TcpProtocolInterface
 						$_SERVER["SERVER_PORT"] = $t[1];
 					}
 				break;
+				case "CONTENT_TYPE":
+					if (!preg_match("/boundary=\"?(\S+)\"?/", $v, $match)) {
+						$_SERVER["CONTENT_TYPE"] = $v;
+					} else {
+						$_SERVER["CONTENT_TYPE"] = "multipart/form-data";
+						$boundary = "--".$match[1];
+					}
+					break;
 				case "COOKIE":
 					$t = str_replace(";", "&", str_replace(" ", "", $messageContent) );
 					parse_str($t, $_COOKIE);
@@ -61,7 +73,11 @@ class Http implements \net\protocol\TcpProtocolInterface
 		}
 
 		if ($_SERVER["REQUEST_METHOD"] == "POST") {
-			parse_str($bodyData, $_POST);
+			if (isset($_SERVER["CONTENT_TYPE"]) && $_SERVER["CONTENT_TYPE"] == "multipart/form-data") {
+				self::parseUploadFiles($bodyData, $boundary);
+			} else {
+				parse_str($bodyData, $_POST);
+			}
 		}
 
 		$_SERVER["QUERY_STRING"] = parse_url($_SERVER["REQUEST_URI"], PHP_URL_QUERY);
@@ -189,6 +205,34 @@ class Http implements \net\protocol\TcpProtocolInterface
 				unlink($v);
 			}
 		}
+	}
+
+	public static function parseUploadFiles($bodyData, $boudary)
+	{
+		$bodyData = explode($boudary."\r\n", $bodyData);
+		unset($bodyData[count($bodyData)-1]);
+		unset($bodyData[0]);
+
+		foreach ($bodyData as $v) {
+			list($boudaryHeader, $boudaryValue) = explode("\r\n\r\n", $v);
+			foreach (explode("\r\n", $boudaryHeader) as $k2=>$v2) {
+				list($name, $value) = explode(":", $v2);
+				switch ($name) {
+					case "content-disposition":
+						if (preg_match("/name=\".*?\"; filename=\"(.*?)\"$/", $value, $match)) {
+							$_FILES[] = [
+								"file_name"=>$match[1],
+								"file_data"=>$boudaryValue,
+								"file_size"=>strlen($boudaryValue)
+							];
+						} else if (preg_match("/name=\"(.*?)\"/", $value, $match)) {
+							$_POST[$match[1]] = $value;
+						}
+						break;
+				}
+			}
+		}
+
 	}
 }
 
