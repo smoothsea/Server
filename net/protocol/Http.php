@@ -7,7 +7,19 @@ class Http implements \net\protocol\TcpProtocolInterface
 {
 	public static function input($buff, TcpConnection $connection)
 	{
-
+		list($headerData, ) = explode("\r\n\r\n", $buff);
+		if (strpos($headerData, "POST") === 0) {
+			if (preg_match("/\r\nContent-Length: ?(\d+)/i", $headerData, $match)) {
+				return $match[1]+strlen($headerData)+4;
+			} else {
+				return 0;
+			}
+		} else if (strpos($headerData, "GET") === 0) {
+			return strlen($headerData)+4;
+		} else {
+			$connection->send("HTTP/1.1 400 Bad Request\r\n");
+			return 0;
+		}
 	}
 
 	public static function decode($buff, TcpConnection $connection)
@@ -38,18 +50,17 @@ class Http implements \net\protocol\TcpProtocolInterface
 		$httpCapital = $headerData[0];
 		list($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI'], $_SERVER['SERVER_PROTOCOL']) = explode(' ',
 				$httpCapital);
-		unset($headerData[0]);
-		$fp = fopen("1.txt", "a+");
-		fwrite($fp, "\r\n-----------------\r\n".$httpCapital);
-		fclose($fp);
 
+		unset($headerData[0]);
+
+		$boundary = "";
 		foreach ($headerData as $v) {
+//			var_dump($v);
 			list($messageName, $messageContent) = explode(":", $v);
 			$messageName = strtoupper(str_replace("-", "_", $messageName));
 			$messageContent = trim($messageContent);
 			$_SERVER["HTTP_".$messageName] = $messageContent;
 
-			$boundary = "";
 			switch($messageName) {
 				case "HOST":
 					$t = explode(":", $messageContent);
@@ -209,8 +220,8 @@ class Http implements \net\protocol\TcpProtocolInterface
 
 	public static function parseUploadFiles($bodyData, $boudary)
 	{
+		$bodyData = substr($bodyData, 0, strlen($bodyData)-strlen($boudary."--\r\n"));
 		$bodyData = explode($boudary."\r\n", $bodyData);
-		unset($bodyData[count($bodyData)-1]);
 		unset($bodyData[0]);
 
 		foreach ($bodyData as $v) {
@@ -218,7 +229,7 @@ class Http implements \net\protocol\TcpProtocolInterface
 			foreach (explode("\r\n", $boudaryHeader) as $k2=>$v2) {
 				list($name, $value) = explode(":", $v2);
 				switch ($name) {
-					case "content-disposition":
+					case "Content-Disposition":
 						if (preg_match("/name=\".*?\"; filename=\"(.*?)\"$/", $value, $match)) {
 							$_FILES[] = [
 								"file_name"=>$match[1],
@@ -226,7 +237,7 @@ class Http implements \net\protocol\TcpProtocolInterface
 								"file_size"=>strlen($boudaryValue)
 							];
 						} else if (preg_match("/name=\"(.*?)\"/", $value, $match)) {
-							$_POST[$match[1]] = $value;
+							$_POST[$match[1]] = $boudaryValue;
 						}
 						break;
 				}

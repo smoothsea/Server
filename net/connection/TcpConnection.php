@@ -11,6 +11,7 @@ class TcpConnection
 	public $protocol = "";
 	public $onMessage = null;
 	public $recvBuff = "";
+	public $buffSize = 0;
 
 	public function __construct($socket, $remoteIp)
 	{
@@ -30,7 +31,26 @@ class TcpConnection
 		}
 
 		$protocol = $this->protocol;
-		call_user_func($this->onMessage, $this, $protocol::decode($buffer, $this));
+		if ($this->recvBuff != "") {
+			$this->buffSize = $this->buffSize ? $this->buffSize : $protocol::input($buffer, $this);
+			if ($this->buffSize == 0) {
+				return ;
+			}
+			if ($this->buffSize > strlen($this->recvBuff)) return;
+
+			if (strlen($this->buffSize) == $this->buffSize) {
+				$oneBuff = $this->recvBuff;
+			} else {
+				$oneBuff = substr($this->recvBuff, 0, $this->buffSize);
+			}
+			$this->recvBuff = "";
+			$this->buffSize = 0;
+
+			if (!$this->onMessage) return;
+
+			call_user_func($this->onMessage, $this, $protocol::decode($oneBuff, $this));
+		}
+
 	}
 
 	public function send($buff)
