@@ -25,6 +25,7 @@ class TcpConnection
 	{
 		$buffer = fread($connection, self::READ_BUFFER_SIZE);
 		if ($buffer == "" || $buffer === false) {
+			$this->destory();
 			return false;
 		} else {
 			$this->recvBuff .= $buffer;
@@ -34,6 +35,7 @@ class TcpConnection
 		if ($this->recvBuff != "") {
 			$this->buffSize = $this->buffSize ? $this->buffSize : $protocol::input($buffer, $this);
 			if ($this->buffSize == 0) {
+				$this->destory();
 				return ;
 			}
 			if ($this->buffSize > strlen($this->recvBuff)) return;
@@ -67,5 +69,10 @@ class TcpConnection
 	public function getRemoteIp()
 	{
 		return $this->remoteIp;
+	}
+
+	public function destory()
+	{
+		Net::$event->removeReadStream($this->socket);
 	}
 }
