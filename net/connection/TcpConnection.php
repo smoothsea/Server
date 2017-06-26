@@ -10,6 +10,7 @@ class TcpConnection
 	private $remoteIp = "";
 	public $protocol = "";
 	public $onMessage = null;
+	public $onClose = null;
 	public $recvBuff = "";
 	public $buffSize = 0;
 
@@ -32,33 +33,34 @@ class TcpConnection
 		}
 
 		$protocol = $this->protocol;
-		if ($this->recvBuff != "") {
-			$this->buffSize = $this->buffSize ? $this->buffSize : $protocol::input($buffer, $this);
-			if ($this->buffSize == 0) {
-				$this->destory();
-				return ;
-			}
-			if ($this->buffSize > strlen($this->recvBuff)) return;
+		if ($this->protocol) {
+		    while ($this->recvBuff !== "") {
+			    $this->buffSize = $this->buffSize ? $this->buffSize : $protocol::input($buffer, $this);
+			    if ($this->buffSize == 0) {
+				   break;
+			    }
+			    if ($this->buffSize > strlen($this->recvBuff)) return;
 
-			if (strlen($this->buffSize) == $this->buffSize) {
-				$oneBuff = $this->recvBuff;
-			} else {
-				$oneBuff = substr($this->recvBuff, 0, $this->buffSize);
-			}
-			$this->recvBuff = "";
-			$this->buffSize = 0;
+			    if (strlen($this->buffSize) == $this->buffSize) {
+				    $oneBuff = $this->recvBuff;
+			    } else {
+				    $oneBuff = substr($this->recvBuff, 0, $this->buffSize);
+			    }
+			    $this->recvBuff = "";
+			    $this->buffSize = 0;
 
-			if (!$this->onMessage) return;
+			    if (!$this->onMessage) return;
 
-			call_user_func($this->onMessage, $this, $protocol::decode($oneBuff, $this));
+			    call_user_func($this->onMessage, $this, $protocol::decode($oneBuff, $this));
+            }
 		}
 
 	}
 
-	public function send($buff)
+	public function send($buff, $raw=false)
 	{
 		$protocol = $this->protocol;
-		$sendContent = $protocol::encode($buff, $this);
+		$sendContent = $raw ? $buff : $protocol::encode($buff, $this);
 
 		if (!$sendContent) return null;
 

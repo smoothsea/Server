@@ -80,6 +80,7 @@ class Net
 
         $connection = new TcpConnection($socket, $remoteIp);
         $connection->onMessage = $this->onMessage;
+        $connection->onClose = $this->onClose;
         $connection->protocol = $this->protocol;
     }
 
