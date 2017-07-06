@@ -3,6 +3,8 @@ namespace net;
 
 use net\connection\TcpConnection;
 use net\event\EventFactory;
+use net\lib\Timer;
+use net\lib\Timers;
 
 class Net
 {
@@ -13,6 +15,7 @@ class Net
     public $onMessage = null;
     public static $event = null;
     public static $masterPid = null;
+    private $socket = null;
 
     public function __construct($address, $port, $protocol)
     {
@@ -27,6 +30,21 @@ class Net
         $this->start();
         $this->display();
         $this->monitor();
+    }
+
+    public function acceptConnection($connection)
+    {
+        $socket = @stream_socket_accept($connection, 0, $remoteIp);
+
+        // Thundering herd.
+        if (!$socket) {
+            return;
+        }
+
+        $connection = new TcpConnection($socket, $remoteIp);
+        $connection->onMessage = $this->onMessage;
+        $connection->onClose = $this->onClose;
+        $connection->protocol = $this->protocol;
     }
 
     private function init()
@@ -46,42 +64,33 @@ class Net
     private function start()
     {
         $context = stream_context_create();
-        $socket = stream_socket_server("tcp://{$this->address}:{$this->port}", $errno, $errmsg,
+        $this->socket = stream_socket_server("tcp://{$this->address}:{$this->port}", $errno, $errmsg,
             STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $context);
-        stream_set_blocking($socket, 0);
+        stream_set_blocking($this->socket, 0);
 
-        if (!$socket) {
+        if (!$this->socket) {
             echo "error:{$errmsg}";
             exit;
         }
 
-        for ($i=0; $i<$this->count; $i++) {
-            $pid = pcntl_fork();
+        Timers::run(self::$event);
 
-            if ($pid == 0) {
-                $that = $this;
-                self::$event->addReadStream($socket, [$this, "acceptConnection"]);
-                self::$event->run();
-            } else {
-                self::$masterPid = getmypid();
-            }
+        for ($i=0; $i<$this->count; $i++) {
+            $this->forkOneWorker();
         }
 
     }
 
-    public function acceptConnection($connection)
+    private function forkOneWorker()
     {
-        $socket = @stream_socket_accept($connection, 0, $remoteIp);
+        $pid = pcntl_fork();
 
-        // Thundering herd.
-        if (!$socket) {
-            return;
+        if ($pid == 0) {
+            self::$event->addReadStream($this->socket, [$this, "acceptConnection"]);
+            self::$event->run();
+        } else {
+            self::$masterPid = getmypid();
         }
-
-        $connection = new TcpConnection($socket, $remoteIp);
-        $connection->onMessage = $this->onMessage;
-        $connection->onClose = $this->onClose;
-        $connection->protocol = $this->protocol;
     }
 
     private function registerEvent()
@@ -102,7 +111,14 @@ class Net
     {
         if (self::$masterPid == getmypid()) {
             while (1) {
-                pcntl_wait($status);
+                pcntl_signal_dispatch();
+
+                $pid = pcntl_wait($status);
+
+                //if a child has already exited
+                if ($pid > 0) {
+                    self::forkOneWorker();
+                }
             }
         }
     }

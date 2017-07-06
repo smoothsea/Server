@@ -1,15 +1,23 @@
 <?php
 namespace net\event;
 
+use net\lib\Timer;
+use net\lib\Timers;
+
 class Libevent
 {
 	public $eventBase = null;
 	public $listeners = [];
 	public $events = [];
+	public $timerEvents = null;
+	public $timerCallback = null;
 
 	public function __construct ()
 	{
 		$this->eventBase = event_base_new();
+
+		$this->timerEvents = new \SplObjectStorage();
+		$this->createTimerCallback();
 	}
 
 	public function addReadStream($socket, $callback)
@@ -22,11 +30,6 @@ class Libevent
 		}
 	}
 
-	public function addWriteStream()
-	{
-
-	}
-
 	public function removeReadStream($socket)
 	{
 		$id = (int)$socket;
@@ -36,6 +39,31 @@ class Libevent
 			return $this->unsetEvent($socket, EV_READ);
 		}
 	}
+
+	public function addWriteStream()
+	{
+
+	}
+
+	public function addTimer($timer)
+    {
+        $event = event_timer_new();
+        $this->timerEvents[$timer] = $event;
+
+        event_timer_set($event, $this->timerCallback, $timer);
+        event_base_set($event, $this->eventBase);
+        event_add($event, $timer->getInterval() * 1000000);
+    }
+
+    public function removeTimer($timer)
+    {
+        $event = $this->timerEvents[$timer];
+
+        event_del($event);
+        event_free($event);
+
+       unset($this->timerEvents[$timer]);
+    }
 
 	public function setEvent($socket, $flag)
 	{
@@ -76,4 +104,17 @@ class Libevent
 	{
 		event_base_loop($this->eventBase);
 	}
+
+	private function createTimerCallback()
+    {
+        $this->timerCallback = function ($_, $__, $timer) {
+            call_user_func($timer->getCallback(), $timer);
+
+            if ($timer->isPersist()) {
+                event_add($this->timerEvents[$timer], $timer->getInterval()*1000000);
+            } else {
+                $this->removeTimer($timer);
+            }
+        };
+    }
 }

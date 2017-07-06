@@ -104,7 +104,6 @@ class Websocket implements \net\protocol\TcpProtocolInterface
         } else {
             $encodeBuff = $firstBuff.chr(127).pack("N", $len).$buff;
         }
-        var_dump($encodeBuff);
 
         return $encodeBuff;
 
