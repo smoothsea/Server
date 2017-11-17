@@ -98,7 +98,7 @@ class Net
         self::$event = EventFactory::getInstance();
 
         if (!self::$event) {
-            exit("please load libevent extension");
+            exit("event loop error");
         }
     }
 

@@ -2,6 +2,7 @@
 namespace net\event;
 
 use \net\event\Libevent;
+use \net\event\StreamSelect;
 
 class EventFactory
 {
@@ -13,7 +14,7 @@ class EventFactory
 			if (extension_loaded("libevent")) {
 				self::$instance = new Libevent();
 			} else {
-				return false;
+			    self::$instance = new StreamSelect();
 			}
 		}
 		return self::$instance;
