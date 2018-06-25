@@ -20,5 +20,6 @@
     "psr-0": {
       "Smoothsea\\": "./"
     }
-  }
+  },
+  "minimum-stability": "dev"
 }
