@@ -1,5 +1,5 @@
 <?php
-namespace net\lib;
+namespace Smoothsea\Net\Lib;
 
 class Timer
 {

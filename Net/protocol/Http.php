@@ -1,9 +1,9 @@
 <?php
-namespace net\protocol;
+namespace Smoothsea\Net\Protocol;
 
-use net\connection\TcpConnection;
+use Smoothsea\Net\Connection\TcpConnection;
 
-class Http implements \net\protocol\TcpProtocolInterface
+class Http implements \Smoothsea\Net\Protocol\TcpProtocolInterface
 {
 	public static function input($buff, TcpConnection $connection)
 	{
@@ -117,7 +117,7 @@ class Http implements \net\protocol\TcpProtocolInterface
 				$header .= $v."\r\n";
 			}
 		}
-		$header .= "Server: net\r\nContent-Length: " . strlen($data) . "\r\n\r\n";
+		$header .= "Server: Net\r\nContent-Length: " . strlen($data) . "\r\n\r\n";
 
 		self::sessionWriteClose();
 

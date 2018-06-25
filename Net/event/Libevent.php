@@ -1,8 +1,8 @@
 <?php
-namespace net\event;
+namespace Smoothsea\Net\Event;
 
-use net\lib\Timer;
-use net\lib\Timers;
+use Smoothsea\Net\Lib\Timer;
+use Smoothsea\Net\Lib\Timers;
 
 class Libevent
 {

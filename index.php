@@ -1,5 +1,5 @@
 <?php
-include_once "./net/autoload.php";
+include_once "./Net/autoload.php";
 
 use net\Net;
 

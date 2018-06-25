@@ -1,7 +1,7 @@
 <?php
-namespace net\connection;
+namespace Smoothsea\Net\Connection;
 
-use \net\Net;
+use Smoothsea\Net\Net;
 
 class TcpConnection
 {

@@ -1,9 +1,9 @@
 <?php
-namespace net\protocol;
+namespace Smoothsea\Net\Protocol;
 
-use net\connection\TcpConnection;
+use Smoothsea\Net\Connection\TcpConnection;
 
-class Websocket implements \net\protocol\TcpProtocolInterface
+class Websocket implements TcpProtocolInterface
 {
     const BINARY_TYPE_BLOD = "\x81";
 

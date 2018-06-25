@@ -1,7 +1,7 @@
 <?php
-namespace net\lib;
+namespace Smoothsea\Net\Lib;
 
-use net\lib\Timer;
+use Smoothsea\Net\Lib\Timer;
 
 class Timers
 {

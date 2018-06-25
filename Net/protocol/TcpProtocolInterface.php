@@ -1,7 +1,7 @@
 <?php
-namespace net\protocol;
+namespace Smoothsea\Net\Protocol;
 
-use net\connection\TcpConnection;
+use Smoothsea\Net\Connection\TcpConnection;
 
 interface TcpProtocolInterface
 {

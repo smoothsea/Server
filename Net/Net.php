@@ -1,5 +1,5 @@
 <?php
-namespace net;
+namespace Smoothsea\Net;
 
 use net\connection\TcpConnection;
 use net\event\EventFactory;
@@ -53,7 +53,7 @@ class Net
 
         //加载协议
         if (!class_exists($this->protocol)) {
-            $protocol = '\\net\\protocol\\'.ucfirst($this->protocol);
+            $protocol = '\\Net\\Protocol\\'.ucfirst($this->protocol);
             if (!class_exists($protocol)) exit("{$protocol} not exist");
             $this->protocol = $protocol;
         }
@@ -98,7 +98,7 @@ class Net
         self::$event = EventFactory::getInstance();
 
         if (!self::$event) {
-            exit("event loop error");
+            exit("Event loop error");
         }
     }
 
