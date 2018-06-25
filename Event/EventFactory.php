@@ -1,8 +1,8 @@
 <?php
-namespace Smoothsea\Net\Event;
+namespace Smoothsea\Event;
 
-use Smoothsea\Net\Event\Libevent;
-use Smoothsea\Net\Event\StreamSelect;
+use Smoothsea\Event\Libevent;
+use Smoothsea\Event\StreamSelect;
 
 class EventFactory
 {

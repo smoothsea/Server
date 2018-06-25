@@ -1,9 +1,9 @@
 <?php
-namespace Smoothsea\Net\Protocol;
+namespace Smoothsea\Protocol;
 
-use Smoothsea\Net\Connection\TcpConnection;
+use Smoothsea\Connection\TcpConnection;
 
-class Http implements \Smoothsea\Net\Protocol\TcpProtocolInterface
+class Http implements \Smoothsea\Protocol\TcpProtocolInterface
 {
 	public static function input($buff, TcpConnection $connection)
 	{

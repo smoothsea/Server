@@ -1,5 +1,5 @@
 <?php
-namespace Smoothsea\Net;
+namespace Smoothsea;
 
 use net\connection\TcpConnection;
 use net\event\EventFactory;
