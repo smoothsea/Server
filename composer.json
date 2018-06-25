@@ -1,0 +1,24 @@
+{
+  "name": "smoothsea/server",
+  "type": "library",
+  "description": "php event library",
+  "keywords": ["event", "websocket"],
+  "homepage": "https://github.com/smoothsea/server",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "smoothsea",
+      "email": "smoothsea@yeah.net",
+      "homepage": "https://github.com/smoothsea/server",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=5.3.0"
+  },
+  "autoload": {
+    "psr-0": {
+      "Smoothsea\\": "./"
+    }
+  }
+}
