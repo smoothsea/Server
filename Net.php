@@ -1,10 +1,10 @@
 <?php
-namespace Smoothsea;
+namespace Server;
 
-use net\connection\TcpConnection;
-use net\event\EventFactory;
-use net\lib\Timer;
-use net\lib\Timers;
+use Server\Connection\TcpConnection;
+use Server\Event\EventFactory;
+use Server\Lib\Timer;
+use Server\Lib\Timers;
 
 class Net
 {

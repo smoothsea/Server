@@ -1,8 +1,8 @@
 <?php
-namespace Smoothsea\Event;
+namespace Server\Event;
 
-use Smoothsea\Lib\Timer;
-use Smoothsea\Lib\Timers;
+use Server\Lib\Timer;
+use Server\Lib\Timers;
 
 class Libevent
 {

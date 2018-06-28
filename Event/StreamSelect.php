@@ -1,5 +1,5 @@
 <?php
-namespace Smoothsea\Event;
+namespace Server\Event;
 
 class StreamSelect
 {

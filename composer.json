@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-0": {
-      "Smoothsea\\": "./"
+      "Server\\": "./"
     }
   },
   "minimum-stability": "dev"
