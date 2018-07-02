@@ -53,7 +53,7 @@ class Net
 
         //加载协议
         if (!class_exists($this->protocol)) {
-            $protocol = '\\Net\\Protocol\\'.ucfirst($this->protocol);
+            $protocol = '\\Server\\Protocol\\'.ucfirst($this->protocol);
             if (!class_exists($protocol)) exit("{$protocol} not exist");
             $this->protocol = $protocol;
         }
