@@ -14,7 +14,6 @@ class Timers
         if ($event) {
             self::$event = $event;
         } else {
-            pcntl_alarm(self::$time);
             static::installHandle();
         }
 
@@ -22,7 +21,7 @@ class Timers
 
     public static function installHandle()
     {
-        pcntl_signal(SIGALRM, array("\\net\\lib\\Timers", "signalHandle"));
+        pcntl_signal(SIGALRM, array("\\Server\\Lib\\Timers", "signalHandle"));
     }
 
     public static function signalHandle()
@@ -67,6 +66,8 @@ class Timers
                 "persist"=>$persist,
                 "interval"=>$interval
             ];
+
+            pcntl_alarm(self::$time);
         }
 
         return $timeObj;
