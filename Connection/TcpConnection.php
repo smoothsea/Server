@@ -8,14 +8,22 @@ class TcpConnection
 	const READ_BUFFER_SIZE = 65535;
 	private $socket = null;
 	private $remoteIp = "";
+
 	public $protocol = "";
 	public $onMessage = null;
 	public $onClose = null;
 	public $recvBuff = "";
 	public $buffSize = 0;
+	public $id = 0;
+    public $net = null;
+
+	static private $idSum = 1;
 
 	public function __construct($socket, $remoteIp)
 	{
+	    self::$idSum++;
+	    $this->id = self::$idSum;
+
 		$this->socket = $socket;
 		$this->remoteIp = $remoteIp;
 
@@ -73,8 +81,23 @@ class TcpConnection
 		return $this->remoteIp;
 	}
 
+	public function close()
+    {
+        return $this->destory();
+    }
+
 	public function destory()
 	{
 		Net::$event->removeReadStream($this->socket);
+		try {
+		    var_dump($this->socket);
+		    @fclose($this->socket);
+        } catch (\Exception $e) {} catch (\Error $e) {}
+
+        if ($this->onClose) {
+            call_user_func($this->onClose, $this);
+        }
+
+        unset($this->net->connections[$this->id]);
 	}
 }

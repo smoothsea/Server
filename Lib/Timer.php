@@ -3,10 +3,13 @@ namespace Server\Lib;
 
 class Timer
 {
+    private $id = null;
     private $interval = "";
     private $callback = null;
     private $argv = [];
     private $persist = true;
+
+    static private $_id = 0;
 
     public function __construct($interval, $callback, $argv=[], $persist=true)
     {
@@ -14,6 +17,12 @@ class Timer
         $this->callback = $callback;
         $this->argv = $argv;
         $this->persist = $persist;
+        $this->id = self::$_id++;
+    }
+
+    public function getId()
+    {
+        return $this->id;
     }
 
     public function getInterval()

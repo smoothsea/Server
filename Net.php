@@ -12,7 +12,11 @@ class Net
     private $port = "";
     public $protocol = "";
     public $count = 1;
+    public $onConnect = null;
+    public $onClose = null;
     public $onMessage = null;
+    public $onStart = null;
+    public $connections = [];
     public static $event = null;
     public static $masterPid = null;
     private $socket = null;
@@ -45,6 +49,18 @@ class Net
         $connection->onMessage = $this->onMessage;
         $connection->onClose = $this->onClose;
         $connection->protocol = $this->protocol;
+        $connection->net = $this;
+
+        if ($this->onConnect) {
+            call_user_func($this->onConnect, $this);
+        }
+
+        $this->connections[$connection->id] = $connection;
+    }
+
+    static public function getEvent()
+    {
+        return self::$event;
     }
 
     private function init()
@@ -86,6 +102,10 @@ class Net
         $pid = pcntl_fork();
 
         if ($pid == 0) {
+            if ($this->onStart) {
+                call_user_func($this->onStart, $this);
+            }
+
             self::$event->addReadStream($this->socket, [$this, "acceptConnection"]);
             self::$event->run();
         } else {
@@ -104,7 +124,7 @@ class Net
 
     private function display()
     {
-        echo "Server is running.prot {$this->port}.print Ctrl+c to close";
+        echo "Server is running.\r\naddress {$this->address}:{$this->port}.\r\nprint Ctrl+c to close\r\n";
     }
 
     private function monitor()

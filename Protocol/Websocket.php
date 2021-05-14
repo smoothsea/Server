@@ -31,7 +31,6 @@ class Websocket implements TcpProtocolInterface
                 break;
             case 0x8:
                 //close type
-                var_dump($connection->onClose);
                 if ($connection->onClose && is_callable($connection->onClose)) {
                     call_user_func($connection->onClose, $connection);
                 }
