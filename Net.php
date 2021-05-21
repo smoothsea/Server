@@ -52,7 +52,7 @@ class Net
         $connection->net = $this;
 
         if ($this->onConnect) {
-            call_user_func($this->onConnect, $this);
+            call_user_func($this->onConnect, $connection);
         }
 
         $this->connections[$connection->id] = $connection;

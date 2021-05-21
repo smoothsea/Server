@@ -7,7 +7,7 @@ class TcpConnection
 {
 	const READ_BUFFER_SIZE = 65535;
 	private $socket = null;
-	private $remoteIp = "";
+	private $remoteSocket = "";
 
 	public $protocol = "";
 	public $onMessage = null;
@@ -19,13 +19,13 @@ class TcpConnection
 
 	static private $idSum = 1;
 
-	public function __construct($socket, $remoteIp)
+	public function __construct($socket, $remoteSocket)
 	{
 	    self::$idSum++;
 	    $this->id = self::$idSum;
 
 		$this->socket = $socket;
-		$this->remoteIp = $remoteIp;
+		$this->remoteSocket = $remoteSocket;
 
 		Net::$event->addReadStream($this->socket, [$this, "baseRead"]);
 	}
@@ -78,8 +78,13 @@ class TcpConnection
 
 	public function getRemoteIp()
 	{
-		return $this->remoteIp;
+		return explode(":", $this->remoteSocket)[0];
 	}
+
+	public function getRemoteSocket()
+    {
+        return $this->remoteSocket;
+    }
 
 	public function close()
     {
