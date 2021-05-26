@@ -63,6 +63,8 @@ class StreamSelect
             if (!$this->scheduler->isEmpty()) {
                 $this->tick();
             }
+
+            usleep(1000);
         }
     }
 

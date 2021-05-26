@@ -124,7 +124,59 @@ class Websocket implements TcpProtocolInterface
         $connection->recvBuff = false;
         $connection->websocketType = static::BINARY_TYPE_BLOD;
 
+        if (isset($connection->onWebSocketConnect) ) {
+            $connection->httpHeaders = self::parseHttpHeader($buff);
+            \call_user_func($connection->onWebSocketConnect, $connection, $buff);
+        }
+
         return 0;
+    }
+
+    public static function parseHttpHeader($buff)
+    {
+        // Parse headers.
+        list($httpHeader, ) = \explode("\r\n\r\n", $buff, 2);
+        $headerData = \explode("\r\n", $httpHeader);
+
+        $headers = [];
+        list($headers['REQUEST_METHOD'], $headers['REQUEST_URI'], $headers['SERVER_PROTOCOL']) = \explode(' ',
+            $headerData[0]);
+
+        unset($headerData[0]);
+        foreach ($headerData as $content) {
+            // \r\n\r\n
+            if (empty($content)) {
+                continue;
+            }
+            list($key, $value)       = \explode(':', $content, 2);
+            $key                     = \str_replace('-', '_', \strtoupper($key));
+            $value                   = \trim($value);
+            $headers['HTTP_' . $key] = $value;
+            switch ($key) {
+                // HTTP_HOST
+                case 'HOST':
+                    $tmp                    = \explode(':', $value);
+                    $headers['SERVER_NAME'] = $tmp[0];
+                    if (isset($tmp[1])) {
+                        $headers['SERVER_PORT'] = $tmp[1];
+                    }
+                    break;
+                // cookie
+                case 'COOKIE':
+                    \parse_str(\str_replace('; ', '&', $headers['HTTP_COOKIE']), $cookie);
+                    break;
+            }
+        }
+
+        // QUERY_STRING
+        $headers['QUERY_STRING'] = \parse_url($headers['REQUEST_URI'], \PHP_URL_QUERY);
+        if ($headers['QUERY_STRING']) {
+            // $GET
+            \parse_str($headers['QUERY_STRING'], $get);
+        } else {
+            $headers['QUERY_STRING'] = '';
+        }
+        return $headers;
     }
 }
 
