@@ -5,13 +5,18 @@ use Server\Connection\TcpConnection;
 use Server\Event\EventFactory;
 use Server\Lib\Timer;
 use Server\Lib\Timers;
+use function var_dump;
 
 class Net
 {
     private $address = "";
     private $port = "";
+    private $socket = null;
+
     public $protocol = "";
+    public $contextOption = [];
     public $count = 1;
+    public $transport = null;
     public $onConnect = null;
     public $onClose = null;
     public $onMessage = null;
@@ -19,13 +24,13 @@ class Net
     public $connections = [];
     public static $event = null;
     public static $masterPid = null;
-    private $socket = null;
 
-    public function __construct($address, $port, $protocol)
+    public function __construct($address, $port, $protocol, $context = [])
     {
         $this->address = $address;
         $this->port = $port;
         $this->protocol = $protocol;
+        $this->contextOption = $context;
     }
 
     public function run()
@@ -38,7 +43,7 @@ class Net
 
     public function acceptConnection($connection)
     {
-        $socket = @stream_socket_accept($connection, 0, $remoteIp);
+        $socket = @\stream_socket_accept($connection, 0, $remoteIp);
 
         // Thundering herd.
         if (!$socket) {
@@ -49,16 +54,17 @@ class Net
         $connection->onMessage = $this->onMessage;
         $connection->onClose = $this->onClose;
         $connection->protocol = $this->protocol;
+        $connection->transport = $this->transport;
         $connection->net = $this;
 
         if ($this->onConnect) {
-            call_user_func($this->onConnect, $connection);
+            \call_user_func($this->onConnect, $connection);
         }
 
         $this->connections[$connection->id] = $connection;
     }
 
-    static public function getEvent()
+    public static function getEvent()
     {
         return self::$event;
     }
@@ -68,9 +74,11 @@ class Net
         $this->checkSapi();
 
         //加载协议
-        if (!class_exists($this->protocol)) {
-            $protocol = '\\Server\\Protocol\\'.ucfirst($this->protocol);
-            if (!class_exists($protocol)) exit("{$protocol} not exist");
+        if (!\class_exists($this->protocol)) {
+            $protocol = '\\Server\\Protocol\\'.\ucfirst($this->protocol);
+            if (!\class_exists($protocol)) {
+                exit("{$protocol} not exist");
+            }
             $this->protocol = $protocol;
         }
 
@@ -79,10 +87,20 @@ class Net
 
     private function start()
     {
-        $context = stream_context_create();
-        $this->socket = stream_socket_server("tcp://{$this->address}:{$this->port}", $errno, $errmsg,
-            STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $context);
-        stream_set_blocking($this->socket, 0);
+        $context = \stream_context_create($this->contextOption);
+        $this->socket = \stream_socket_server(
+            "tcp://{$this->address}:{$this->port}",
+            $errno,
+            $errmsg,
+            STREAM_SERVER_BIND | STREAM_SERVER_LISTEN,
+            $context
+        );
+
+        if ($this->transport = "ssl") {
+            \stream_socket_enable_crypto($this->socket, false);
+        }
+
+        \stream_set_blocking($this->socket, 0);
 
         if (!$this->socket) {
             echo "error:{$errmsg}";
@@ -94,22 +112,21 @@ class Net
         for ($i=0; $i<$this->count; $i++) {
             $this->forkOneWorker();
         }
-
     }
 
     private function forkOneWorker()
     {
-        $pid = pcntl_fork();
+        $pid = \pcntl_fork();
 
         if ($pid == 0) {
             if ($this->onStart) {
-                call_user_func($this->onStart, $this);
+                \call_user_func($this->onStart, $this);
             }
 
             self::$event->addReadStream($this->socket, [$this, "acceptConnection"]);
             self::$event->run();
         } else {
-            self::$masterPid = getmypid();
+            self::$masterPid = \getmypid();
         }
     }
 
@@ -129,11 +146,11 @@ class Net
 
     private function monitor()
     {
-        if (self::$masterPid == getmypid()) {
+        if (self::$masterPid == \getmypid()) {
             while (1) {
-                pcntl_signal_dispatch();
+                \pcntl_signal_dispatch();
 
-                $pid = pcntl_wait($status);
+                $pid = \pcntl_wait($status);
 
                 //if a child has already exited
                 if ($pid > 0) {
@@ -143,8 +160,10 @@ class Net
         }
     }
 
-    static private function checkSapi()
+    private static function checkSapi()
     {
-        if (php_sapi_name() !== "cli") exit("Please run in cli environment");
+        if (\php_sapi_name() !== "cli") {
+            exit("Please run in cli environment");
+        }
     }
 }

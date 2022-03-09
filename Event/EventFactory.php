@@ -6,17 +6,17 @@ use Server\Event\StreamSelect;
 
 class EventFactory
 {
-	static public $instance = null;
+    public static $instance = null;
 
-	static public function getInstance()
-	{
-		if (!self::$instance) {
-			if (extension_loaded("libevent")) {
-				self::$instance = new Libevent();
-			} else {
-			    self::$instance = new StreamSelect();
-			}
-		}
-		return self::$instance;
-	}
+    public static function getInstance()
+    {
+        if (!self::$instance) {
+            if (extension_loaded("libevent")) {
+                self::$instance = new Libevent();
+            } else {
+                self::$instance = new StreamSelect();
+            }
+        }
+        return self::$instance;
+    }
 }

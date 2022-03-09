@@ -9,15 +9,15 @@ class Timer
     private $argv = [];
     private $persist = true;
 
-    static private $_id = 0;
+    private static $sid = 0;
 
-    public function __construct($interval, $callback, $argv=[], $persist=true)
+    public function __construct($interval, $callback, $argv = [], $persist = true)
     {
         $this->interval = $interval;
         $this->callback = $callback;
         $this->argv = $argv;
         $this->persist = $persist;
-        $this->id = self::$_id++;
+        $this->id = self::$sid++;
     }
 
     public function getId()
