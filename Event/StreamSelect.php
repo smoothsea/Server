@@ -102,7 +102,13 @@ class StreamSelect
         $read = $this->readStreams;
         $write = [];
 
-        $valid = $this->streamSelect($read, $write, $timeout);
+        if ($read || $write) {
+            $valid = $this->streamSelect($read, $write, $timeout);
+        } else {
+            $timeout >= 1 && usleep($timeout);
+            $valid = false;
+        }
+
         if (!$valid) {
             return false;
         }

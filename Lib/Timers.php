@@ -17,6 +17,7 @@ class Timers
         } else {
             static::installHandle();
         }
+
     }
 
     public static function installHandle()
@@ -42,7 +43,7 @@ class Timers
                 }
 
                 unset(self::$task[$k]);
-            } elseif ($k < $time) {
+            } else if ($k < $time) {
                 unset(self::$task[$k]);
             }
         }
