@@ -5,7 +5,9 @@ namespace Server\Event;
 class StreamSelect
 {
     public $readStreams = [];
+    public $writeStreams = [];
     public $listeners = [];
+    public $writeListeners = [];
     public $events = [];
     private $scheduler = null;  // Timer scheduler
     private $eventTimer = [];   // Timer event listeners
@@ -36,10 +38,25 @@ class StreamSelect
         }
     }
 
-    public function addWriteStream()
+    public function addWriteStream($socket, $callback)
     {
+        $id = (int)$socket;
+
+        if (!isset($this->writeListeners[$id])) {
+            $this->writeListeners[$id] = $callback;
+            $this->writeStreams[$id] = $socket;
+        }
     }
 
+    public function removeWriteStream($socket)
+    {
+        $id = (int)$socket;
+
+        if (isset($this->writeListeners[$id])) {
+            unset($this->writeListeners[$id]);
+            unset($this->writeStreams[$id]);
+        }
+    }
 
     public function addTimer($timer)
     {
@@ -100,7 +117,7 @@ class StreamSelect
     private function waitForStreamActivity($timeout)
     {
         $read = $this->readStreams;
-        $write = [];
+        $write = $this->writeStreams;
 
         if ($read || $write) {
             $valid = $this->streamSelect($read, $write, $timeout);
@@ -122,7 +139,7 @@ class StreamSelect
         foreach ($write as $stream) {
             $id = (int)$stream;
 
-            call_user_func($this->listeners[$id], $stream, $this);
+            call_user_func($this->writeListeners[$id], $stream, $this);
         }
     }
 
