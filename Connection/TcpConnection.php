@@ -157,10 +157,10 @@ class TcpConnection
 
     public function close()
     {
-        return $this->destory();
+        return $this->destroy();
     }
 
-    public function destory()
+    public function destroy()
     {
         Net::$event->removeReadStream($this->socket);
         try {

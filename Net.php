@@ -3,9 +3,7 @@ namespace Server;
 
 use Server\Connection\TcpConnection;
 use Server\Event\EventFactory;
-use Server\Lib\Timer;
 use Server\Lib\Timers;
-use function var_dump;
 
 class Net
 {
